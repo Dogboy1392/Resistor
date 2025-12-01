@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculadora de Resistencias</title>
+    
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#ffffff">
+    <link rel="apple-touch-icon" href="icon.png">
+    <meta name="mobile-web-app-capable" content="yes">
+    
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+            user-select: none; /* Evita que se seleccione texto al tocar en el cel */
+        }
+        .container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        /* Ajuste para pantallas de celular */
+        .resistor {
+            position: relative;
+            width: 100%; /* Ancho flexible */
+            max-width: 400px;
+            height: 120px;
+            margin: 20px auto;
+            transform: scale(0.9); /* Un poco más pequeño para móviles */
+        }
+        .body {
+            position: absolute;
+            width: 300px;
+            height: 80px;
+            background-color: beige;
+            left: 50%;
+            margin-left: -150px; /* Centrado absoluto */
+            top: 20px;
+            border-radius: 10px;
+        }
+        .lead {
+            position: absolute;
+            width: 50px;
+            height: 6px;
+            background-color: silver;
+            top: 57px;
+        }
+        .lead.left { left: 0; }
+        .lead.right { right: 0; }
+        
+        /* Ajuste de las bandas para que queden centradas en el cuerpo */
+        .band {
+            position: absolute;
+            width: 20px;
+            height: 80px;
+            top: 20px;
+        }
+        
+        select {
+            padding: 12px; /* Más fácil de tocar con el dedo */
+            margin: 5px;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+            width: 100%; /* Ocupa todo el ancho en celular */
+            font-size: 16px;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #e9ecef;
+            border-radius: 4px;
+            text-align: center;
+            font-size: 1.5em; /* Texto más grande */
+            font-weight: bold;
+        }
+        .controls {
+            text-align: center;
+            margin-bottom: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 style="text-align: center;">Calculadora de Resistencias</h1>
+        
+        <div class="resistor">
+            <div class="lead left" style="left: calc(50% - 200px);"></div>
+            <div class="body"></div>
+            <div class="lead right" style="right: calc(50% - 200px);"></div>
+            <div id="band1Display" class="band" style="left: calc(50% - 60px);"></div>
+            <div id="band2Display" class="band" style="left: calc(50% - 10px);"></div>
+            <div id="multiplierDisplay" class="band" style="left: calc(50% + 40px);"></div>
+            <div id="toleranceDisplay" class="band" style="left: calc(50% + 90px);"></div>
+        </div>
+
+        <div class="result" id="result">
+            --- Ω
+        </div>
+
+        <div class="controls">
+            <label>Banda 1 (Dígito)</label>
+            <select id="band1">
+                <option value="black">Negro (0)</option>
+                <option value="brown">Marrón (1)</option>
+                <option value="red">Rojo (2)</option>
+                <option value="orange">Naranja (3)</option>
+                <option value="yellow">Amarillo (4)</option>
+                <option value="green">Verde (5)</option>
+                <option value="blue">Azul (6)</option>
+                <option value="violet">Violeta (7)</option>
+                <option value="gray">Gris (8)</option>
+                <option value="white">Blanco (9)</option>
+            </select>
+            
+            <label>Banda 2 (Dígito)</label>
+            <select id="band2">
+                <option value="black">Negro (0)</option>
+                <option value="brown">Marrón (1)</option>
+                <option value="red">Rojo (2)</option>
+                <option value="orange">Naranja (3)</option>
+                <option value="yellow">Amarillo (4)</option>
+                <option value="green">Verde (5)</option>
+                <option value="blue">Azul (6)</option>
+                <option value="violet">Violeta (7)</option>
+                <option value="gray">Gris (8)</option>
+                <option value="white">Blanco (9)</option>
+            </select>
+            
+            <label>Multiplicador</label>
+            <select id="multiplier">
+                <option value="black">Negro (×1 Ω)</option>
+                <option value="brown">Marrón (×10 Ω)</option>
+                <option value="red">Rojo (×100 Ω)</option>
+                <option value="orange">Naranja (×1 kΩ)</option>
+                <option value="yellow">Amarillo (×10 kΩ)</option>
+                <option value="green">Verde (×100 kΩ)</option>
+                <option value="blue">Azul (×1 MΩ)</option>
+                <option value="violet">Violeta (×10 MΩ)</option>
+                <option value="gold">Dorado (×0.1 Ω)</option>
+                <option value="silver">Plateado (×0.01 Ω)</option>
+            </select>
+            
+            <label>Tolerancia</label>
+            <select id="tolerance">
+                <option value="brown">Marrón (±1%)</option>
+                <option value="red">Rojo (±2%)</option>
+                <option value="gold" selected>Dorado (±5%)</option>
+                <option value="silver">Plateado (±10%)</option>
+            </select>
+        </div>
+    </div>
+
+    <script>
+        const colorValues = {
+            'black': 0, 'brown': 1, 'red': 2, 'orange': 3, 'yellow': 4,
+            'green': 5, 'blue': 6, 'violet': 7, 'gray': 8, 'white': 9,
+            'gold': -1, 'silver': -2 // No se usan en bandas 1 y 2, pero por seguridad
+        };
+
+        const multiplierValues = {
+            'black': 1, 'brown': 10, 'red': 100, 'orange': 1000,
+            'yellow': 10000, 'green': 100000, 'blue': 1000000,
+            'violet': 10000000, 'gold': 0.1, 'silver': 0.01
+        };
+
+        const toleranceValues = {
+            'brown': '±1%', 'red': '±2%', 'gold': '±5%', 'silver': '±10%'
+        };
+
+        function updateResistorDisplay() {
+            const band1Color = document.getElementById('band1').value;
+            const band2Color = document.getElementById('band2').value;
+            const multiplierColor = document.getElementById('multiplier').value;
+            const toleranceColor = document.getElementById('tolerance').value;
+
+            document.getElementById('band1Display').style.backgroundColor = band1Color;
+            document.getElementById('band2Display').style.backgroundColor = band2Color;
+            document.getElementById('multiplierDisplay').style.backgroundColor = multiplierColor;
+            document.getElementById('toleranceDisplay').style.backgroundColor = toleranceColor;
+
+            calculateResistance();
+        }
+
+        function calculateResistance() {
+            const val1 = colorValues[document.getElementById('band1').value];
+            const val2 = colorValues[document.getElementById('band2').value];
+            const mult = multiplierValues[document.getElementById('multiplier').value];
+            const tol = toleranceValues[document.getElementById('tolerance').value];
+
+            let totalOhms = (val1 * 10 + val2) * mult;
+            
+            // Formateo bonito
+            let formattedValue;
+            if (totalOhms >= 1000000) {
+                formattedValue = (totalOhms / 1000000).toFixed(2).replace(/\.00$/, '') + ' MΩ';
+            } else if (totalOhms >= 1000) {
+                formattedValue = (totalOhms / 1000).toFixed(2).replace(/\.00$/, '') + ' kΩ';
+            } else {
+                formattedValue = totalOhms.toFixed(2).replace(/\.00$/, '') + ' Ω';
+            }
+
+            document.getElementById('result').innerText = `${formattedValue} ${tol}`;
+        }
+
+        ['band1', 'band2', 'multiplier', 'tolerance'].forEach(id => {
+            document.getElementById(id).addEventListener('change', updateResistorDisplay);
+        });
+
+        updateResistorDisplay();
+
+        // Registro del Service Worker para que funcione Offline
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js')
+                    .then(reg => console.log('App lista para instalar', reg))
+                    .catch(err => console.log('Error:', err));
+            });
+        }
+    </script>
+</body>
+</html>
